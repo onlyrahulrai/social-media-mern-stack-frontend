@@ -1,6 +1,6 @@
 import React from "react";
 import Avatar from "../../assets/profile.png";
-import { capitalizeString } from "../../helper/common";
+import { capitalizeString, getImageUrl } from "../../helper/common";
 
 const UserCard = ({ user }) => {
   const { profile, username, firstName, lastName, email } = user;
@@ -8,7 +8,7 @@ const UserCard = ({ user }) => {
   return (
     <div className="d-flex align-items-center">
       <img
-        src={profile || Avatar}
+        src={getImageUrl(profile) || Avatar}
         alt=""
         width={48}
         height={48}

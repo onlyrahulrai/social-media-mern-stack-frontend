@@ -1,18 +1,17 @@
 import React from "react";
-import {useAuthStore} from "../../store/store"
+import { useAuthStore } from "../../store/store";
 
 const Sidebar = () => {
-
-  const {bio} = useAuthStore((state) => state.auth)
+  const { auth } = useAuthStore((state) => state);
 
   return (
     <div className="position-sticky" style={{ top: "2rem" }}>
-      <div className="p-4 mb-3 bg-body-tertiary rounded">
-        <h4 className="fst-italic">About</h4>
-        <p className="mb-0">
-          {bio}
-        </p>
-      </div>
+      {auth ? (
+        <div className="p-4 mb-3 bg-body-tertiary rounded">
+          <h4 className="fst-italic">About</h4>
+          <p className="mb-0">{auth?.bio}</p>
+        </div>
+      ) : null}
 
       <div className="p-4">
         <h4 className="fst-italic">Archives</h4>

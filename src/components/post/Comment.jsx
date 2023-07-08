@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Button, Form, Input } from "reactstrap";
 import { useAuthStore } from "../../store/store";
 import Avatar from "../../assets/profile.png";
-import { capitalizeString } from "../../helper/common";
+import { capitalizeString, getImageUrl } from "../../helper/common";
 import UserCard from "../common/UserCard";
 import { ChatBubbleOvalLeftIcon } from "@heroicons/react/24/outline";
 import axiosInstance from "../../api/base";
@@ -11,12 +11,11 @@ import { useParams } from "react-router-dom";
 
 const CommentForm = ({ isReply, id, setPost, ...rest }) => {
   const [content, setContent] = useState("");
-  const { profile, firstName, lastName } = useAuthStore((state) => state.auth);
+  const { auth } = useAuthStore((state) => state);
   const [isFocused, setIsFocused] = useState(false);
 
   const onChangeFocused = () => setIsFocused((state) => !state);
 
-  
   const onComment = async (e) => {
     e.preventDefault();
 
@@ -73,18 +72,23 @@ const CommentForm = ({ isReply, id, setPost, ...rest }) => {
   };
 
   return (
-    <div className={`shadow-lg py-4 px-3 mt-3 ${rest.isOpen ? 'd-block' : 'd-none'}`}>
+    <div
+      className={`shadow-lg py-4 px-3 mt-3 ${
+        rest.isOpen ? "d-block" : "d-none"
+      }`}
+    >
       {!isReply && isFocused ? (
         <div className="d-flex flex-row gap-2 align-items-center mb-4">
           <img
-            src={profile || Avatar}
+            src={getImageUrl(auth?.profile) || Avatar}
             alt="User"
             width={42}
             height={42}
             className="object-fit-contain rounded-full cursor-pointer border shadow-lg"
           />
           <span>
-            {capitalizeString(firstName)} {capitalizeString(lastName)}
+            {capitalizeString(auth?.firstName)}{" "}
+            {capitalizeString(auth?.lastName)}
           </span>
         </div>
       ) : null}
@@ -138,6 +142,7 @@ const CommentContent = (props) => {
     replies,
     setPost,
   } = props;
+  const { auth } = useAuthStore((state) => state);
 
   return (
     <div>
@@ -156,16 +161,25 @@ const CommentContent = (props) => {
         ) : (
           <span></span>
         )}
-        <span
-          className="cursor-pointer"
-          onClick={() => setIsOpen((state) => !state)}
-        >
-          Reply
-        </span>
+
+        {auth ? (
+          <span
+            className="cursor-pointer"
+            onClick={() => setIsOpen((state) => !state)}
+          >
+            Reply
+          </span>
+        ) : null}
       </div>
       {/* {isOpen ? ( */}
       <div className="my-2">
-        <CommentForm isReply={true} setPost={setPost} id={id} {...props} isOpen={isOpen} />
+        <CommentForm
+          isReply={true}
+          setPost={setPost}
+          id={id}
+          {...props}
+          isOpen={isOpen}
+        />
       </div>
       {/*  ) : null} */}
     </div>
@@ -218,6 +232,9 @@ const CommentCard = (props) => {
 
 const Comment = ({ comments, setPost }) => {
   const { id } = useParams();
+
+  const { auth } = useAuthStore((state) => state);
+
   return (
     <div
       className="offcanvas offcanvas-end"
@@ -233,7 +250,7 @@ const Comment = ({ comments, setPost }) => {
         ></button>
       </div>
       <div className="offcanvas-body">
-        <CommentForm setPost={setPost} id={id} isOpen={true} />
+        {auth ? <CommentForm setPost={setPost} id={id} isOpen={true} /> : null}
 
         {comments?.map((comment, key) => (
           <CommentCard {...comment} key={`comment-${key}`} setPost={setPost} />

@@ -11,6 +11,8 @@ export const getLinesOfDescription = (description) => {
   return blocksFromHTML.contentBlocks.map((block) => block.text);
 }
 
+export const getImageUrl = (path) => `${process.env.REACT_APP_STATIC_BASE_URL}/${path}`
+
 export const onfollow = async (user,setState) => {
   try {
     const followPromise = axiosInstance.put("/follow-user", {

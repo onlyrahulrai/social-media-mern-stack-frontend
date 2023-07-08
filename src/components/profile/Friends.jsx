@@ -25,7 +25,10 @@ const Friends = () => {
     const fetchUser = async () => {
       setLoading(true);
       try {
-        setUser(await getUser({ username }));
+        await getUser({ username })
+        .then((user) => {
+          setUser(user)
+        })
         setLoading(false);
       } catch (error) {
         toast.error(error);
@@ -117,7 +120,7 @@ const Friends = () => {
             className={`cursor-pointer ${
               tab === "1" ? "bg-primary text-light py-2 px-2 rounded" : null
             }`}
-            onClick={() => (user?.following?.length ? onChageTab(1) : void 0)}
+            onClick={() => onChageTab(1)}
           >
             <span className="mx-1">{(user?.id === auth?.id) ? auth?.following?.length : user?.following?.length} Following</span>
           </NavItem>
@@ -126,7 +129,7 @@ const Friends = () => {
             className={`cursor-pointer ${
               tab === "2" ? "bg-primary text-light py-2 px-2 rounded" : null
             }`}
-            onClick={() => (user?.followers?.length ? onChageTab(2) : void 0)}
+            onClick={() => onChageTab(2)}
           >
             <span className="mx-1">{(user?.id === auth?.id) ? auth?.followers?.length : user?.followers?.length} Followers</span>
           </NavItem>

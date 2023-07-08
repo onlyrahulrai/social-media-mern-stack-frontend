@@ -10,14 +10,16 @@ const Followers = ({ profile, onRequestFriend, onRemoveUserFromFollowers }) => {
   const { auth } = useAuthStore((state) => state);
   const { username } = useParams();
   const [{ data, loading }, , refetch] = useFetchAPI(`/followers/${username}/`);
-  const [search,setSearch] = useState("");
+  const [search, setSearch] = useState("");
 
   const FriendRequiredAction = ({ user }) => {
     return (
       <>
         {console.log(
           " Profile and Auth ",
-          profile?.id === auth?.id,auth?.followers,user?._id
+          profile?.id === auth?.id,
+          auth?.followers,
+          user?._id
         )}
         {auth?.id !== user?._id ? (
           profile?.id === auth?.id && auth?.followers?.includes(user?._id) ? (
@@ -54,33 +56,46 @@ const Followers = ({ profile, onRequestFriend, onRemoveUserFromFollowers }) => {
 
   if (loading) return <Spinner />;
 
+  console.log(" Data ", data);
+
   return (
-    <div style={{ minHeight: "62vh" }}>
-      <div className="input-group">
-        <input
-          className="form-control border rounded-pill"
-          type="search"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-      </div>
+    <div>
+      {data?.followers?.length ? (
+        <div>
+          <div className="input-group">
+            <input
+              className="form-control border rounded-pill"
+              type="search"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
 
-      <div className="d-flex justify-content-center mt-3">
-        <ListGroup style={{ width: "75%" }}>
-          {data?.followers?.map((user, key) => (
-            <ListGroupItem className="shadow-lg my-1 rounded" key={key}>
-              <div>
-                <div className="d-flex justify-content-between">
-                  <UserCard user={user} />
+          <div className="d-flex justify-content-center mt-3">
+            <ListGroup style={{ width: "75%" }}>
+              {data?.followers?.map((user, key) => (
+                <ListGroupItem className="shadow-lg my-1 rounded" key={key}>
+                  <div>
+                    <div className="d-flex justify-content-between">
+                      <UserCard user={user} />
 
-                  <FriendRequiredAction user={user} />
-                </div>
-              </div>
-            </ListGroupItem>
-          ))}
-        </ListGroup>
-      </div>
+                      <FriendRequiredAction user={user} />
+                    </div>
+                  </div>
+                </ListGroupItem>
+              ))}
+            </ListGroup>
+          </div>
+        </div>
+      ) : (
+        <div
+          className="d-flex justify-content-center align-items-center"
+          style={{ minHeight: "62vh" }}
+        >
+          <span>You don't have any followers.</span>
+        </div>
+      )}
     </div>
   );
 };

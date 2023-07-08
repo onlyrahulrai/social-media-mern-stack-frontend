@@ -17,8 +17,6 @@ import { useAuthStore } from "../store/store";
 import axiosInstance from "../api/base";
 
 const Login = () => {
-  const navigate = useNavigate()
-  const location = useLocation()
   const {setAuth} = useAuthStore((state) => state);
 
   const formik = useFormik({
@@ -43,15 +41,17 @@ const Login = () => {
 
       loginPromise.then((res) => {
         let { access,refresh,...rest } = res.data;
-
-        setAuth(rest)
-
+ 
         const setToken = Promise.resolve(localStorage.setItem("authTokens", JSON.stringify({access,refresh})))
+        
         const setAuthorization = Promise.resolve(axiosInstance.authorize())
 
         Promise.all([setToken,setAuthorization])
         .then(() => {
-          navigate(`${location?.state?.from?.pathname || "/"}`)
+
+          setAuth(rest)
+
+          // navigate(location?.state ? `/${location?.state?.pathname}` : "/")
         })
       });
     },

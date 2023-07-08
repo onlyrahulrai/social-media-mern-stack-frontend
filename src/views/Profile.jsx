@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useAuthStore, useLayoutStore } from "../store/store";
 import Avatar from "../assets/profile.png";
-import { capitalizeString } from "../helper/common";
+import { capitalizeString, getImageUrl } from "../helper/common";
 import { Button, Nav, NavItem, TabContent, TabPane } from "reactstrap";
 import { TableCellsIcon, BookmarkIcon } from "@heroicons/react/24/outline";
 import {
@@ -21,7 +21,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState(1);
   const [user, setUser] = useState({});
-  const { id } = useAuthStore((state) => state.auth);
+  const { auth, socket } = useAuthStore((state) => state);
   const { loading, setLoading } = useLayoutStore((state) => state);
   const location = useLocation();
 
@@ -56,7 +56,16 @@ const Profile = () => {
       });
 
       followPromise.then(({ data }) => {
-        setUser((state) => ({ ...state, followers: data.followers }));
+        Promise.resolve(
+          setUser((state) => ({ ...state, followers: data.followers }))
+        ).then(() => {
+          if (!user?.followers?.includes(id)) {
+            socket.emit("onFollowUserRequest", {
+              user: user?.id,
+              follow: !user?.followers?.includes(id) ? true : false,
+            });
+          }
+        });
       });
     } catch (error) {
       return toast.error("Couldn't follow the user.");
@@ -70,7 +79,7 @@ const Profile = () => {
       <div className="row justify-content-center align-items-center my-5">
         <div className="col-md-3">
           <img
-            src={user?.profile || Avatar}
+            src={user?.profile ? getImageUrl(user?.profile) : Avatar}
             alt=""
             width={198}
             height={198}
@@ -83,7 +92,7 @@ const Profile = () => {
               {capitalizeString(user?.username || "")}
             </span>
 
-            {id === user?.id ? (
+            {auth?.id === user?.id ? (
               <Button
                 color="primary"
                 type="button"
@@ -97,10 +106,10 @@ const Profile = () => {
                 <Button
                   color="primary"
                   type="button"
-                  onClick={() => onFollow(user, id)}
+                  onClick={() => onFollow(user, auth?.id)}
                   className="mx-5"
                 >
-                  {user?.followers?.includes(id) ? "Unfollow" : "Follow"}
+                  {user?.followers?.includes(auth?.id) ? "Unfollow" : "Follow"}
                 </Button>
               </>
             )}
@@ -154,12 +163,22 @@ const Profile = () => {
             pills
             className="d-flex justify-content-center gap-5 mb-5 border-top"
           >
-            <NavItem className={`cursor-pointer ${tab === 1 ? 'bg-primary py-1 px-2 rounded text-white' :''}`} onClick={() => setTab(1)}>
+            <NavItem
+              className={`cursor-pointer ${
+                tab === 1 ? "bg-primary py-1 px-2 rounded text-white" : ""
+              }`}
+              onClick={() => setTab(1)}
+            >
               <TableCellsIcon style={{ width: "1.5rem", height: "1.5rem" }} />
               <span className="mx-1">Posts</span>
             </NavItem>
 
-            <NavItem className={`cursor-pointer ${tab === 2 ? 'bg-primary py-1 px-2 rounded text-white' :''}`}  onClick={() => setTab(2)}>
+            <NavItem
+              className={`cursor-pointer ${
+                tab === 2 ? "bg-primary py-1 px-2 rounded text-white" : ""
+              }`}
+              onClick={() => setTab(2)}
+            >
               <BookmarkIcon style={{ width: "1.5rem", height: "1.5rem" }} />
               <span className="mx-1">Saved</span>
             </NavItem>

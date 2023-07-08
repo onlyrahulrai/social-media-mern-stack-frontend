@@ -62,3 +62,7 @@ div[title]:hover::after {
   position: absolute;
   z-index: 1;
 }
+
+.bg-light-gray{
+  background-color: #D3D3D3 !important;
+}

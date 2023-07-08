@@ -12,18 +12,20 @@ import {
 } from "reactstrap";
 import { useFormik } from "formik";
 import { profileValidation } from "../helper/validate";
-import {  updateUser } from "../helper/helper";
+import { updateUser } from "../helper/helper";
 import { toast } from "react-hot-toast";
 import Avatar from "../assets/profile.png";
 import { convertToBase64 } from "../helper/convert";
-import {ArrowLeftIcon} from "@heroicons/react/24/outline"
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../store/store";
+import { getImageUrl } from "../helper/common";
 
 const Profile = () => {
-  const [file,setFile] =  useState(null)
-  const navigate = useNavigate()
-  const {auth} = useAuthStore((state) => state)
+  const [file, setFile] = useState(null);
+  const [displayImage, setDisplayImage] = useState(null);
+  const navigate = useNavigate();
+  const { auth } = useAuthStore((state) => state);
 
   const formik = useFormik({
     initialValues: {
@@ -33,51 +35,73 @@ const Profile = () => {
       address: auth?.address || "",
       username: auth?.username || "",
       email: auth?.email || "",
-      bio:auth?.bio || ""
+      bio: auth?.bio || "",
     },
     validate: profileValidation,
     validateOnBlur: false,
     validateOnChange: false,
-    enableReinitialize:true,
+    enableReinitialize: true,
     onSubmit: async (values) => {
+      const formData = new FormData();
 
-      values = Object.assign(values,{profile:file || auth?.profile || ""});
+      formData.append("firstName", values?.firstName);
+      formData.append("lastName", values?.lastName);
+      formData.append("mobile", values?.mobile);
+      formData.append("address", values?.address);
+      formData.append("username", values?.username);
+      formData.append("email", values?.email);
+      formData.append("bio", values?.bio);
 
-      const updatePromise = updateUser(values);
+      if(file) {
+        formData.append("profile", file);
+      }
 
-      toast.promise(updatePromise,{
-        loading:"Updating...",
-        success:<b>Update Successfully</b>,
-        error:<b>Could not Update!</b>
-      })
+      const updatePromise = updateUser(formData);
+
+      toast.promise(updatePromise, {
+        loading: "Updating...",
+        success: <b>Update Successfully</b>,
+        error: <b>Could not Update!</b>,
+      });
     },
   });
 
-  const onUpload = async (e) => {
-    const base64 = await convertToBase64(e.target.files[0]);
-    setFile(base64);
+  const onUpload = (e) => {
+    console.log(" Files  ", e.target.files[0]);
+    Promise.resolve(setFile(e.target.files[0])).then(async () => {
+      setDisplayImage(await convertToBase64(e.target.files[0]));
+    });
   };
+
+  // console.log(" Display Image ", displayImage);
 
   return (
     <React.Fragment>
       <div
         className="d-flex justify-content-center align-items-center"
-        style={{minHeight:"90vh"}}
+        style={{ minHeight: "90vh" }}
       >
         <Card style={{ width: "428px" }} className="shadow-lg">
           <CardBody>
-            <ArrowLeftIcon style={{ width: "1.5rem", height: "1.5rem" }} className="cursor-pointer" onClick={() => navigate(`/${auth?.username}`)} />
+            <ArrowLeftIcon
+              style={{ width: "1.5rem", height: "1.5rem" }}
+              className="cursor-pointer"
+              onClick={() => navigate(`/${auth?.username}`)}
+            />
             <h3 className="text-center py-3">Update Profile </h3>
             <Form onSubmit={formik.handleSubmit}>
               <div className="w-100 d-flex justify-content-center my-3 cursor-pointer">
+
                 <Label htmlFor="profile">
                   <img
-                    src={file || auth?.profile || Avatar}
+                    src={
+                      displayImage ? displayImage : auth?.profile ? getImageUrl(auth?.profile) : Avatar
+                    }
                     alt="profile"
                     className="img-fluid object-fit"
                     width="98px"
                     height="98px"
-                    style={{borderRadius:"50%"}}
+                    style={{ borderRadius: "50%" }}
                   />
                 </Label>
                 <input
@@ -97,7 +121,7 @@ const Profile = () => {
                       name="firstName"
                       placeholder="John"
                       type="text"
-                      {...formik.getFieldProps('firstName')}
+                      {...formik.getFieldProps("firstName")}
                     />
                   </FormGroup>
                 </Col>
@@ -109,7 +133,7 @@ const Profile = () => {
                       name="lastName"
                       placeholder="Doe"
                       type="text"
-                      {...formik.getFieldProps('lastName')}
+                      {...formik.getFieldProps("lastName")}
                     />
                   </FormGroup>
                 </Col>
@@ -123,7 +147,8 @@ const Profile = () => {
                       name="username"
                       placeholder="john"
                       type="text"
-                      {...formik.getFieldProps('username')}
+                      {...formik.getFieldProps("username")}
+                      disabled={auth?.username}
                     />
                   </FormGroup>
                 </Col>
@@ -135,7 +160,8 @@ const Profile = () => {
                       name="email"
                       placeholder="john@gmail.com"
                       type="email"
-                      {...formik.getFieldProps('email')}
+                      {...formik.getFieldProps("email")}
+                      disabled={auth?.email}
                     />
                   </FormGroup>
                 </Col>
@@ -147,7 +173,7 @@ const Profile = () => {
                   name="mobile"
                   placeholder="+919648772088"
                   type="text"
-                  {...formik.getFieldProps('mobile')}
+                  {...formik.getFieldProps("mobile")}
                 />
               </FormGroup>
               <FormGroup>
@@ -156,7 +182,7 @@ const Profile = () => {
                   id="exampleAddress"
                   name="address"
                   placeholder="1234 Main St"
-                  {...formik.getFieldProps('address')}
+                  {...formik.getFieldProps("address")}
                 />
               </FormGroup>
               <FormGroup>
@@ -166,7 +192,7 @@ const Profile = () => {
                   name="bio"
                   type="textarea"
                   placeholder="Write somthing about you..."
-                  {...formik.getFieldProps('bio')}
+                  {...formik.getFieldProps("bio")}
                 />
               </FormGroup>
               <div className="d-grid gap-2">

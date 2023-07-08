@@ -1,30 +1,30 @@
 import { Outlet, Navigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "../store/store";
 
 export const PrivateRoutes = () => {
-  let authTokens = localStorage.getItem("authTokens") ? JSON.parse(localStorage.getItem('authTokens')) : null;
+  const { auth } = useAuthStore((state) => state);
 
   const location = useLocation();
 
   if (
-    authTokens?.access &&
+    !auth &&
     ["/login", "/register", "reset", "recovery"].includes(location.pathname)
   )
     return <Navigate to={` ${location.state.from.pathname || "/"} `} replace />;
 
-  return authTokens?.access ? <Outlet /> : <Navigate to="/login" />;
+  return auth ? <Outlet /> : <Navigate to="/login" />;
 };
 
 export const PublicRoutes = () => {
-  let authTokens = localStorage.getItem("authTokens") ? JSON.parse(localStorage.getItem('authTokens')) : null;
-
   const location = useLocation();
+  const { auth } = useAuthStore((state) => state);
 
-  const pathname = Boolean(location?.state?.from?.pathname)
-    ? location?.state?.from?.pathname
+  const pathname = location?.state
+    ? location?.state?.pathname
     : "/";
 
   if (
-    !authTokens?.access &&
+    !auth &&
     ["/login", "/register", "/reset", "/recovery", "/verify-otp"].includes(
       location.pathname
     )

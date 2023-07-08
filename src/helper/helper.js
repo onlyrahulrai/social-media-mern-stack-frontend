@@ -1,5 +1,4 @@
 import jwtDecode from "jwt-decode";
-import axios from "axios";
 import axiosInstance from "../api/base";
 
 // To get username from token
@@ -16,7 +15,7 @@ export const getUsername = () => {
 // authenticate function
 export const authenticate = async (username) => {
   try {
-    return await axios.post("/authenticate", { username });
+    return await axiosInstance.post("/authenticate", { username });
   } catch (error) {
     return { error: "Username doesn't exist" };
   }
@@ -25,7 +24,7 @@ export const authenticate = async (username) => {
 // Get User
 export const getUser = async ({ username }) => {
   try {
-    const { data } = await axios.get(`/user/${username}`);
+    const { data } = await axiosInstance.get(`/users/${username}`);
     return Promise.resolve(data);
   } catch (error) {
     return Promise.reject("Couldn't get the user..." );
@@ -35,7 +34,7 @@ export const getUser = async ({ username }) => {
 export const loginUser = async ({ username, password }) => {
   try {
     if (username) {
-      const { data } = await axios.post("/login", {
+      const { data } = await axiosInstance.post("/login", {
         username,
         password,
       });
@@ -51,13 +50,13 @@ export const registerUser = async (credentials) => {
     const {
       data,
       status,
-    } = await axios.post("/register", credentials);
+    } = await axiosInstance.post("/register", credentials);
 
     let { username, email } = credentials;
 
     /** Send Mail */
     if (status === 201) {
-      await axios.post("/register-mail", {
+      await axiosInstance.post("/register-mail", {
         username,
         userEmail: email,
         text: "Your account is created successfully!",
@@ -78,14 +77,14 @@ export const generateOTP = async (username) => {
     const {
       data: { code },
       status,
-    } = await axios.get("/generate-otp", { params: { username } });
+    } = await axiosInstance.get("/generate-otp", { params: { username } });
 
     if (status === 201) {
       let { email:userEmail } = await getUser({ username });
 
       let text = `Your Password Recovery OTP is ${code}.Verify and recover your password.`;
 
-      await axios.post('/register-mail',{username,userEmail,text,subject:"Password recovery OTP"})
+      await axiosInstance.post('/register-mail',{username,userEmail,text,subject:"Password recovery OTP"})
     }
 
     return Promise.resolve(code);
@@ -96,7 +95,7 @@ export const generateOTP = async (username) => {
 
 export const verifyOTP = async ({username,code}) => {
   try {
-    const {data,status} = await axios.get('/verify-otp',{params:{code,username}})
+    const {data,status} = await axiosInstance.get('/verify-otp',{params:{code,username}})
 
     return Promise.resolve({data,status})
   } catch (error) {
@@ -106,7 +105,7 @@ export const verifyOTP = async ({username,code}) => {
 
 export const resetPassword = async (values) => {
   try {
-    const {data,status} = await axios.put('/reset-password/',values)
+    const {data,status} = await axiosInstance.put('/reset-password/',values)
 
     return Promise.resolve({data,status})
   } catch (error) {
@@ -117,6 +116,7 @@ export const resetPassword = async (values) => {
 export const updateUser = async (values) => {
   try {
     const data = await axiosInstance.put("/update-user",values)
+    
     return Promise.resolve(data)
   } catch (error) {
     return Promise.reject({error:"Could't Update Profile..."})
@@ -125,7 +125,7 @@ export const updateUser = async (values) => {
 
 export const getPost = async (id) => {
   try {
-    const {data,status} = await axios.get(`/posts/${id}`)
+    const {data,status} = await axiosInstance.get(`/posts/${id}`)
     return Promise.resolve({status,data})
   } catch (error) {
     return Promise.reject("Couldn't fetch the post.")
@@ -135,7 +135,7 @@ export const getPost = async (id) => {
 export const refreshAccessToken = async () => {
   try {
     const authTokens = localStorage.getItem("authTokens") ? JSON.parse(localStorage.getItem("authTokens")) : null;
-    const {data} = await axios.post("/token/refresh/",{refresh:authTokens?.refresh})
+    const {data} = await axiosInstance.post("/token/refresh/",{refresh:authTokens?.refresh})
     return Promise.resolve(data)
   } catch (error) {
     console.log(" Error ",error)
