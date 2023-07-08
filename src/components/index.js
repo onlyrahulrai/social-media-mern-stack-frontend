@@ -5,3 +5,4 @@ export {default as Footer} from "./home/Footer";
 export {default as Posts} from './home/Posts';
 export {default as UserProfilePosts} from './profile/UserProfilePosts';
 export {default as UserProfileSavedPosts} from './profile/UserProfileSavedPosts';
+export {default as NotificationContent} from './notification/NotificationContent';

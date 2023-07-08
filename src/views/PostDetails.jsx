@@ -10,7 +10,7 @@ import { toast } from "react-hot-toast";
 import Spinner from "../components/Spinner";
 import { Link } from "react-router-dom";
 import Avatar from "../assets/profile.png";
-import { capitalizeString } from "../helper/common";
+import { capitalizeString, getImageUrl } from "../helper/common";
 import {
   EllipsisVerticalIcon,
   PencilIcon,
@@ -113,7 +113,7 @@ const ShareButtons = () => {
 const PostDetail = () => {
   const { id } = useParams();
   const [post, setPost] = useState(null);
-  const { setAuth, auth } = useAuthStore((state) => state);
+  const { setAuth, auth,socket } = useAuthStore((state) => state);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -173,6 +173,8 @@ const PostDetail = () => {
 
       likePostPromise.then(({ data }) => {
         setPost((state) => ({ ...state, likes: data?.likes }));
+
+        socket.emit("postLikedNotification",{liked:data?.likes.includes(auth?.id),postId:id,user:post?.user?._id})
       });
     } catch (error) {
       return toast.error(" Couldn't accept your request... ");
@@ -206,23 +208,27 @@ const PostDetail = () => {
     [auth]
   );
 
+  
+
   if (loading) return <Spinner />;
 
   return (
     <div>
-      <h3 className="pb-4 mb-4 fst-italic border-bottom">From the Firehose</h3>
+      <h3 className="pb-2 mb-3 fst-italic border-bottom">From the Firehose</h3>
 
       <article className="blog-post">
         <div className="d-flex justify-content-between">
           <div className="d-flex align-items-center my-3">
-            <img
-              src={post?.user?.profile || Avatar}
-              alt=""
-              width={42}
-              height={42}
-              className="object-fit-contain rounded-full cursor-pointer"
-              onClick={() => navigate(`/${post?.user?.username}`)}
-            />
+            {post?.user?.profile ? (
+              <img
+                src={getImageUrl(post?.user?.profile) || Avatar}
+                alt=""
+                width={42}
+                height={42}
+                className="object-fit-contain rounded-full cursor-pointer"
+                onClick={() => navigate(`/${post?.user?.username}`)}
+              />
+            ) : null}
             <div className="mx-2">
               <div>
                 <span>
@@ -236,7 +242,7 @@ const PostDetail = () => {
               </span>
             </div>
           </div>
-          {auth.id === post?.user?._id ? (
+          {auth?.id === post?.user?._id ? (
             <UncontrolledDropdown className="me-2">
               <DropdownToggle caret color="light">
                 <EllipsisVerticalIcon
@@ -277,13 +283,28 @@ const PostDetail = () => {
           <Row>
             <Col md="6" className="d-flex align-items-center gap-4">
               <div className={`cursor-pointer`}>
-                <HandThumbUpIcon
-                  onClick={onLikePost}
-                  style={{ width: "1.5rem", height: "1.5rem" }}
-                  color={`${
-                    post?.likes?.includes(auth?.id) ? "#0d6efd" : null
-                  }`}
-                />{" "}
+                {auth ? (
+                  <HandThumbUpIcon
+                    onClick={onLikePost}
+                    style={{ width: "1.5rem", height: "1.5rem" }}
+                    color={`${
+                      post?.likes?.includes(auth?.id) ? "#0d6efd" : null
+                    }`}
+                  />
+                ) : (
+                  <Link
+                    to="/login"
+                    state={{ pathname: `posts/${id}` }}
+                    className="text-dark"
+                  >
+                    <HandThumbUpIcon
+                      style={{ width: "1.5rem", height: "1.5rem" }}
+                      color={`${
+                        post?.likes?.includes(auth?.id) ? "#0d6efd" : null
+                      }`}
+                    />
+                  </Link>
+                )}{" "}
                 <span>{post?.likes?.length}</span>
               </div>
               <div className="cursor-pointer">
@@ -311,19 +332,30 @@ const PostDetail = () => {
               <ShareButtons />
 
               <div className="cursor-pointer">
-                {console.log(
-                  " Auth Featured Posts ",
-                  auth,
-                  auth?.featuredPosts?.map(({ _id }) => _id).includes(id)
+                {auth ? (
+                  <BookmarkIcon
+                    style={{
+                      width: "1.5rem",
+                      height: "1.5rem",
+                      color: isPostSaved ? "#0d6efd" : null,
+                    }}
+                    onClick={() => (auth ? onPostSaved() : void 0)}
+                  />
+                ) : (
+                  <Link
+                    to="/login"
+                    state={{ pathname: `posts/${id}` }}
+                    className="text-dark"
+                  >
+                    <BookmarkIcon
+                      style={{
+                        width: "1.5rem",
+                        height: "1.5rem",
+                        color: isPostSaved ? "#0d6efd" : null,
+                      }}
+                    />
+                  </Link>
                 )}
-                <BookmarkIcon
-                  style={{
-                    width: "1.5rem",
-                    height: "1.5rem",
-                    color: isPostSaved ? "#0d6efd" : null,
-                  }}
-                  onClick={onPostSaved}
-                />{" "}
               </div>
             </Col>
           </Row>

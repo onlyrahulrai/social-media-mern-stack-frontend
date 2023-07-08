@@ -3,10 +3,10 @@ import Banner from "../../assets/banner.jpg";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import Avatar from "../../assets/profile.png";
-import { getLinesOfDescription } from "../../helper/common";
+import { getImageUrl, getLinesOfDescription } from "../../helper/common";
 
 const Post = (props) => {
-  const { _id: id, title, description, created_at, user } = props;
+  const { _id: id, title, description, created_at, user, photo } = props;
   const { username, profile, firstName, lastName } = user;
   const [content, setContent] = useState("");
   const navigate = useNavigate();
@@ -38,7 +38,7 @@ const Post = (props) => {
       <div className="row g-0">
         <div className="col-md-4">
           <img
-            src={Banner}
+            src={` ${process.env.REACT_APP_BASE_URL}/uploads/${photo}`}
             className="img-fluid rounded-start"
             alt="..."
             style={{ height: "100%" }}
@@ -48,7 +48,7 @@ const Post = (props) => {
           <div className="card-body">
             <div className="d-flex align-items-center">
               <img
-                src={profile || Avatar}
+                src={getImageUrl(profile) || Avatar}
                 alt=""
                 width={42}
                 height={42}
@@ -66,7 +66,9 @@ const Post = (props) => {
 
             <div className="my-2">
               <h3 className="card-title">{title}</h3>
-              <p className="card-text">{content ? `${content}..` : null}</p>
+              <p className="card-text">
+                {content ? `${content.trim().substring(0, 128)}..` : null}
+              </p>
               <p className="card-text">
                 <span className={`badge rounded-pill text-bg-${getColorClass}`}>
                   World

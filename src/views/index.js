@@ -10,3 +10,4 @@ export { default as PageNotFound } from "./PageNotFound";
 export { default as Reset } from "./Reset";
 export { default as PostDetails } from "./PostDetails";
 export { default as CreatePost } from "./CreatePost";
+export { default as Notification } from "./Notification";

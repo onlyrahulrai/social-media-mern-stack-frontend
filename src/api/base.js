@@ -1,7 +1,8 @@
 import axios from "axios";
 import { useAuthStore } from "../store/store";
+import { isAuthTokenExpired } from "../helper/validate";
 
-const getAuthTokens = () =>
+export const getAuthTokens = () =>
   localStorage.getItem("authTokens")
     ? JSON.parse(localStorage.getItem("authTokens"))
     : null;
@@ -38,10 +39,13 @@ axiosInstance.interceptors.request.use(async function(config) {
 // Response interceptor for API calls
 axiosInstance.interceptors.response.use(
   (response) => {
-    if(response.data?.userConfig){
+    if (response.data?.userConfig) {
       useAuthStore.setState((state) => {
-        return {...state,auth:{...state.auth,...response.data?.userConfig}}
-      })
+        return {
+          ...state,
+          auth: { ...state.auth, ...response.data?.userConfig },
+        };
+      });
     }
 
     return response;
@@ -49,25 +53,39 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If the error response is a 401 and the original request had an access token,
-    // try refreshing the access token and retry the original request
     if (
-      error?.response?.status === 401 &&
+      error.response.status === 401 &&
       originalRequest.headers.Authorization
     ) {
-      originalRequest._retry = true;
+      const access = originalRequest.headers.Authorization.replace(
+        "Bearer",
+        ""
+      ).trim();
 
       const refresh = getAuthTokens()?.refresh;
 
-      const { data } = await axios.post("/token/refresh", { refresh });
+      if (isAuthTokenExpired(access) && !isAuthTokenExpired(refresh)) {
+        originalRequest._retry = true;
 
-      localStorage.setItem("authTokens", JSON.stringify(data));
+        return await axios
+          .post(`${process.env.REACT_APP_BASE_URL}/token/refresh/`, { refresh })
+          .then(({ data }) => {
+            localStorage.setItem(
+              "authTokens",
+              JSON.stringify({ access: data.access, refresh })
+            );
 
-      originalRequest.headers.Authorization = `Bearer ${data?.access}`;
+            originalRequest.headers.Authorization = `Bearer ${data?.access}`;
 
-      return axiosInstance(originalRequest);
+            return axiosInstance(originalRequest)
+          })
+          .catch((error) => {
+            Promise.resolve(localStorage.removeItem("authTokens")).then(() =>
+              Promise.reject(error)
+            );
+          });
+      }
     }
-    return Promise.reject(error);
   }
 );
 

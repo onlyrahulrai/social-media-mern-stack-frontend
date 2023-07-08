@@ -10,7 +10,7 @@ const Posts = ({posts}) => {
 
   return (
     <React.Fragment>
-      <h3 className="pb-4 mb-4 fst-italic border-bottom">From the Toksi</h3>
+      <h3 className="pb-2 mb-3 fst-italic border-bottom">From the Toksi</h3>
 
       {
         posts.map((post,key) => <Post key={key} {...post} />)
