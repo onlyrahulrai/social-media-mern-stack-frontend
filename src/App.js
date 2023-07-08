@@ -26,7 +26,7 @@ import { isAuthTokenExpired } from "./helper/validate";
 function App() {
   const { setState, auth,notifications } = useAuthStore((state) => state);
 
-  const socket = io.connect("http://127.0.0.1:9000", {
+  const socket = io.connect(process.env.REACT_APP_BASE_URL, {
     query:
       getAuthTokens()?.access && !isAuthTokenExpired(getAuthTokens()?.access)
         ? {
