@@ -8,11 +8,13 @@ import { getImageUrl } from "../helper/common";
 import Avatar from "../assets/profile.png";
 import moment from "moment";
 import { NotificationContent } from "../components";
+import useSocketContext from "../context/useSocketContext";
 
 const Notification = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const { setState, notifications, socket } = useAuthStore();
+  const { setState, notifications } = useAuthStore();
+  const {socket} = useSocketContext(); 
 
   useEffect(() => {
     const fetchNotification = async () => {
@@ -50,20 +52,20 @@ const Notification = () => {
     return (
       <div
         className="d-flex justify-content-center align-items-center text-center"
-        style={{ minHeight: "67vh" }}
+        style={{ minHeight: "70vh" }}
       >
         <pre className="text-danger">{error}</pre>
       </div>
     );
 
-  if (loading) return <Spinner style={{ minHeight: "67vh" }} />;
+  if (loading) return <Spinner style={{ minHeight: "70vh" }} />;
 
   return (
     <div
       className={`d-flex text-center ${
         !notifications.length ? "justify-content-center" : ""
       } flex-column`}
-      style={{ minHeight: "67vh" }}
+      style={{ minHeight: "70vh" }}
     >
       {!notifications.length ? (
         <NoContent text={"No Notification Found"} />

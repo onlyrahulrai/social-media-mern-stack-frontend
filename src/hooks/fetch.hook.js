@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { getUsername } from "../helper/helper";
 import { useAuthStore } from "../store/store";
 
-axios.defaults.baseURL = process.env.REACT_APP_BASE_URL;
+axios.defaults.baseURL = process.env.REACT_APP_API_URL;
 
 export default function useFetch(query) {
   const [getData, setData] = useState({

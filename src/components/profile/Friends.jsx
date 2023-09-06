@@ -100,10 +100,10 @@ const Friends = () => {
     }
   };
 
-  if (loading) return <Spinner style={{ minHeight: "68vh" }} />;
+  if (loading) return <Spinner style={{ minHeight: "70vh" }} />;
 
   return (
-    <div style={{ minHeight: "62vh" }} className="mt-5">
+    <div style={{ minHeight: "65vh" }} className="mt-5">
       <div
         className="text-primary cursor-pointer"
         onClick={() => navigate(`/${username}`)}

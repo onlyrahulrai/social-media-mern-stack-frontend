@@ -11,12 +11,15 @@ import draftToHtml from "draftjs-to-html";
 import { getPost } from "../helper/helper";
 import htmlToDraft from "html-to-draftjs";
 import Spinner from "../components/Spinner";
-import DummyImage from "../assets/posts/1.jpg";
 import { convertToBase64 } from "../helper/convert";
+import categories from "../assets/data/categories";
+import Select from "react-select";
+import useSocketContext from "../context/useSocketContext";
 
 const initalState = {
   title: "",
   description: EditorState.createEmpty(),
+  categories: [],
 };
 
 const CreatePost = () => {
@@ -25,20 +28,22 @@ const CreatePost = () => {
   const [state, setState] = useState(initalState);
   const { loading, setLoading } = useLayoutStore((state) => state);
   const navigate = useNavigate();
-  const { auth,socket } = useAuthStore((state) => state);
+  const { auth } = useAuthStore((state) => state);
   const [photo, setPhoto] = useState(null);
   const [displayImage, setDisplayImage] = useState(null);
-
-  console.log(" Auth ",auth)
+  const [isPostLoading, setIsPostLoading] = useState(false);
+  const {socket} = useSocketContext();
 
   useEffect(() => {
     const fetchPost = () => {
       setLoading(true);
+      setIsPostLoading(true);
       getPost(id)
-        .then(({ data }) => {
-          const { title, description, photo } = data;
+        .then(({ data:{post} }) => {
 
-          if (Object.keys(auth).length && auth?.id !== data?.user?._id) {
+          const { title, description, photo, categories } = post;
+
+          if (Object.keys(auth).length && auth?.id !== post?.user?._id) {
             toast.error(" Your aren't allowed to edit this post!");
 
             return navigate("/");
@@ -55,15 +60,17 @@ const CreatePost = () => {
 
           setDisplayImage(`${process.env.REACT_APP_STATIC_BASE_URL}/${photo}`);
 
-          Promise.resolve(
-            setState((state) => ({
-              ...state,
-              title,
-              description: newEditorState,
-            }))
-          ).then(() => setLoading(false));
+          setIsPostLoading(false);
+
+          setState((state) => ({
+            ...state,
+            title,
+            description: newEditorState,
+            categories,
+          }));
         })
-        .catch((error) => toast.error(error));
+        .catch((error) => toast.error(error))
+        .finally(() => setLoading(false));
     };
     if (id) {
       fetchPost();
@@ -80,7 +87,7 @@ const CreatePost = () => {
     e.preventDefault();
 
     try {
-      const { title, description } = state;
+      const { title, description, categories } = state;
 
       const content = description.getCurrentContent();
 
@@ -95,6 +102,7 @@ const CreatePost = () => {
 
       formData.append("title", title);
       formData.append("description", draftToHtml(contentRaw));
+      formData.append("categories", JSON.stringify(categories));
 
       if (photo) {
         formData.append("photo", photo);
@@ -114,8 +122,8 @@ const CreatePost = () => {
         .then(({ data }) => {
           setLoading(false);
 
-          if(!id){
-            socket.emit("onCreatePostRequest",{post:data?.id})
+          if (!id) {
+            socket.emit("onCreatePostRequest", { post: data?.id });
           }
 
           navigate(`/posts/${data?.id}`);
@@ -141,9 +149,10 @@ const CreatePost = () => {
     Promise.resolve(setDisplayImage(null)).then(() => setPhoto(null));
   };
 
-  console.log(" Loading ",loading && id)
+  console.log(" Loading ", loading && id);
 
-  if (loading && id) return <Spinner style={{ minHeight: "68vh" }} />;
+  if (isPostLoading && loading && id)
+    return <Spinner style={{ minHeight: "68vh" }} />;
 
   return (
     <Card className="my-5">
@@ -192,6 +201,25 @@ const CreatePost = () => {
                 )}
               </div>
             </div>
+          </FormGroup>
+          <FormGroup>
+            <Label htmlFor="categories">Categories</Label>
+
+            {!isPostLoading ? (
+              <Select
+                isMulti
+                defaultValue={state.categories}
+                name="categories"
+                options={categories}
+                className="basic-multi-select"
+                classNamePrefix="select"
+                onChange={(data) =>
+                  setState((state) => ({ ...state, categories: data }))
+                }
+                menuPortalTarget={document.body}
+                styles={{ menuPortal: (base) => ({ ...base, zIndex: 9999 }) }}
+              />
+            ) : null}
           </FormGroup>
           <FormGroup>
             <Label for="description">Description</Label>

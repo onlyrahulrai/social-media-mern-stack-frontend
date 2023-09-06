@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { capitalizeString } from "../../helper/common";
-import { EyeIcon } from "@heroicons/react/24/outline";
+
 
 const NotificationContent = ({ notification }) => {
   const navigate = useNavigate();

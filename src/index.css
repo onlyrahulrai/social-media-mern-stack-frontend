@@ -1,3 +1,7 @@
+:root{
+  --light-gray:#F0F2F5;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
@@ -45,7 +49,7 @@ code {
   columns: 256px 10;
 }
 
-.post-card{
+.post-card {
   height: auto;
   margin-bottom: 20px;
   break-inside: avoid;
@@ -63,6 +67,93 @@ div[title]:hover::after {
   z-index: 1;
 }
 
+.bg-light-gray {
+  background-color: #d3d3d3 !important;
+}
+
+#hero::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.9);
+  border-radius: 10px;
+  background-color: #fff;
+}
+
+#hero::-webkit-scrollbar {
+  width: 12px;
+  background-color: #fff;
+}
+
+#hero::-webkit-scrollbar-thumb {
+  border-radius: 10px;
+  background-color: #fa6946;
+  background-image: -webkit-linear-gradient(
+    90deg,
+    transparent,
+    rgba(0, 0, 0, 0.4) 50%,
+    transparent,
+    transparent
+  );
+}
+
+.start-78 {
+  left: 78% !important;
+}
+
+.hero-carousel .carousel-item{
+  border: 1px solid rgba(57, 57, 57, 0.5);
+}
+
+.hero-carousel .carousel-control-prev-icon,
+.hero-carousel .carousel-control-next-icon{
+  background-color: rgba(57, 57, 57, 0.5);
+  border-radius: 36px;
+}
+
+.hero-carousel .carousel-item,
+.hero-carousel .carousel-item img {
+  border-radius: 24px !important;
+}
+
+.hero-carousel .carousel-item img {
+  height: 75vh !important;
+  object-fit: contain;
+  -webkit-filter: blur(5px); /* Safari 6.0 - 9.0 */
+  filter: blur(2px);
+}
+
+.hero-carousel .carousel-caption h3,
+.hero-carousel .carousel-caption p {
+  color: #fff !important;
+}
+
+.hero-carousel .carousel-caption p {
+  margin-bottom: 32px !important;
+}
+
+.hero-carousel .carousel-caption {
+  position: absolute;
+  background: rgba(57, 57, 57, 0.5);
+
+  /* center overlay text */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 0 0 24px 24px;
+
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  padding: 1rem;
+}
+
+.p-half{
+  padding: 0.5rem !important;
+}
+
+.m-half{
+  margin: 0.5rem !important;
+}
+
 .bg-light-gray{
-  background-color: #D3D3D3 !important;
+  background-color: var(--light-gray) !important;
 }
