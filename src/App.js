@@ -11,6 +11,7 @@ import {
   CreatePost,
   EditProfile,
   Notification,
+  Chat,
 } from "./views";
 import { PrivateRoutes, PublicRoutes } from "./middleware/Auth";
 import { Toaster } from "react-hot-toast";
@@ -18,29 +19,19 @@ import BaseLayout from "./layouts/BaseLayout";
 import Friends from "./components/profile/Friends";
 import React, { useEffect } from "react";
 import { useAuthStore } from "./store/store";
-import axiosInstance, { getAuthTokens } from "./api/base";
+import axiosInstance from "./api/base";
 import { Routes, Route } from "react-router-dom";
-import io from "socket.io-client";
-import { isAuthTokenExpired } from "./helper/validate";
+import { ChatProvider } from "./context/useChatContext";
 
 function App() {
-  const { setState, auth,notifications } = useAuthStore((state) => state);
-
-  const socket = io.connect(process.env.REACT_APP_BASE_URL, {
-    query:
-      getAuthTokens()?.access && !isAuthTokenExpired(getAuthTokens()?.access)
-        ? {
-            token: getAuthTokens()?.access,
-          }
-        : null,
-  });
+  const { setState } = useAuthStore((state) => state);
 
   useEffect(() => {
     const loadUserDetails = async () => {
       await axiosInstance
         .get("/user-details/")
         .then((response) => {
-          setState({ auth: response.data, socket });
+          setState({ auth: response.data });
         })
         .catch((error) => {
           console.log(" Error ");
@@ -52,59 +43,36 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    socket.on("onNotificationMarkedReadResponse", ({notification:_notification,countOfNotification}) => {
-
-      const tempNotifications = notifications.map((notification) => {
-        if(notification._id === _notification?._id){
-          return {...notification,read:_notification?.read}
-        }
-        return notification
-      })
-
-      setState({notifications:tempNotifications,auth:{...auth,countOfNotification}})
-    });
-
-    socket.on("sendPostLikedNotificationMessage", (data) => {
-      console.log(" Data ",data)
-      const { countOfNotification, notification } = data;
-
-      setState({notifications:notifications.concat(notification),auth:{ ...auth, countOfNotification }});
-    });
-
-    socket.on("onFollowUserResponse",(data) => {
-      console.log(" data on Follow User Response",data)
-
-      const { countOfNotification, notification } = data;
-
-      setState({notifications:notifications.concat(notification),auth:{ ...auth, countOfNotification }});
-    })
-
-    socket.on("onCreatePostResponse",(data) => {
-      console.log(" data on create post response ",data)
-
-      const { countOfNotification, notification } = data;
-
-      setState({notifications:notifications.concat(notification),auth:{ ...auth, countOfNotification }});
-    })
-  }, [socket]);
-
   return (
     <React.Fragment>
       <Routes>
-        <Route element={<BaseLayout sidebar hero />}>
+        <Route element={<BaseLayout sidebar slider />}>
           <Route path="/" element={<Home />} />
+        </Route>
+
+        <Route element={<BaseLayout sidebar />}>
           <Route path="/posts/:id" element={<PostDetails />} />
         </Route>
 
         <Route element={<PrivateRoutes />}>
           <Route element={<BaseLayout />}>
             <Route path="notifications" element={<Notification />} />
+
             <Route path="/posts/create/" element={<CreatePost />} />
             <Route path="/posts/:id/update" element={<CreatePost />} />
             <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/:username" element={<Profile />} />
             <Route path="/:username/friends" element={<Friends />} />
+          </Route>
+          <Route element={<BaseLayout full />}>
+            <Route
+              path="chat"
+              element={
+                <ChatProvider>
+                  <Chat />
+                </ChatProvider>
+              }
+            />
           </Route>
         </Route>
 

@@ -8,7 +8,7 @@ export const getAuthTokens = () =>
     : null;
 
 const axiosInstance = axios.create({
-  baseURL: process.env.REACT_APP_BASE_URL,
+  baseURL: process.env.REACT_APP_API_URL,
   timeout: 10000,
   headers: {
     Authorization: `Bearer ${getAuthTokens()?.access}`,
@@ -68,7 +68,7 @@ axiosInstance.interceptors.response.use(
         originalRequest._retry = true;
 
         return await axios
-          .post(`${process.env.REACT_APP_BASE_URL}/token/refresh/`, { refresh })
+          .post(`${process.env.REACT_APP_API_URL}/token/refresh/`, { refresh })
           .then(({ data }) => {
             localStorage.setItem(
               "authTokens",

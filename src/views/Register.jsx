@@ -21,6 +21,8 @@ const Register = () => {
 
   const formik = useFormik({
     initialValues:{
+      firstName:"",
+      lastName:"",
       username:"",
       email:"",
       password:""
@@ -56,6 +58,28 @@ const Register = () => {
           <CardBody>
             <h3 className="text-center py-3">Register </h3>
             <Form onSubmit={formik.handleSubmit}>
+              <FormGroup>
+                <Label for="username">Firstname</Label>
+                <Input
+                  type="text"
+                  name="firstName"
+                  placeholder="John"
+                  id="firstname"
+                  {...formik.getFieldProps("firstName")}
+                  required
+                />
+              </FormGroup>
+              <FormGroup>
+                <Label for="lastname">Lastname</Label>
+                <Input
+                  type="text"
+                  name="lastname"
+                  placeholder="Doe"
+                  id="lastname"
+                  {...formik.getFieldProps("lastName")}
+                  required
+                />
+              </FormGroup>
               <FormGroup>
                 <Label for="username">Username</Label>
                 <Input

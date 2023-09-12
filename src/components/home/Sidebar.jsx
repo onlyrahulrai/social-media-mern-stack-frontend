@@ -1,35 +1,63 @@
 import React from "react";
 import { useAuthStore } from "../../store/store";
+import UsersForConnections from "../common/UsersForConnections";
+import { useNavigate } from "react-router-dom";
+
+const categories = [
+  "Programming",
+  "Data Science",
+  "Technology",
+  "Self Improvement",
+  "Writing",
+  "Relationships",
+  "Machine Learning",
+  "Coding",
+  "Blockchain",
+  "Artificial Intelligence",
+  "ChatGPT",
+  "30 Day Challenge",
+  "Drawing",
+  "Game Development",
+  "Tech",
+];
 
 const Sidebar = () => {
   const { auth } = useAuthStore((state) => state);
+  const navigate = useNavigate();
 
   return (
     <div className="position-sticky" style={{ top: "2rem" }}>
       {auth ? (
-        <div className="p-4 mb-3 bg-body-tertiary rounded">
+        <div className="p-4 bg-body-tertiary rounded">
           <h4 className="fst-italic">About</h4>
           <p className="mb-0">{auth?.bio}</p>
         </div>
       ) : null}
 
       <div className="p-4">
-        <h4 className="fst-italic">Archives</h4>
-        <ol className="list-unstyled mb-0">
-          <li>March 2021</li>
-          <li>February 2021</li>
-          <li>January 2021</li>
-          <li>December 2020</li>
-          <li>November 2020</li>
-          <li>October 2020</li>
-          <li>September 2020</li>
-          <li>August 2020</li>
-          <li>July 2020</li>
-          <li>June 2020</li>
-          <li>May 2020</li>
-          <li>April 2020</li>
+        <h4 className="fst-italic">Recommended topics</h4>
+        <ol className="list-unstyled">
+          {categories.map((category, key) => (
+            <li
+              className="badge rounded-pill text-bg-secondary p-2 m-1 cursor-pointer"
+              key={key}
+              onClick={() => navigate(`/?category=${category}`)}
+            >
+              {category}
+            </li>
+          ))}
         </ol>
       </div>
+
+      {auth ? (
+        <div className="p-4">
+          <h4 className="fst-italic">Who to follow</h4>
+
+          <div>
+            <UsersForConnections />
+          </div>
+        </div>
+      ) : null}
 
       <div className="p-4">
         <h4 className="fst-italic">Elsewhere</h4>

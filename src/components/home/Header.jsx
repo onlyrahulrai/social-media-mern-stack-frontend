@@ -15,18 +15,20 @@ import {
   PencilSquareIcon,
   UserGroupIcon,
   BellIcon,
+  ChatBubbleOvalLeftIcon,
 } from "@heroicons/react/24/outline";
-import Avatar from "../../assets/profile.png";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import axiosInstance from "../../api/base";
 import { useAuthStore } from "../../store/store";
-import { getImageUrl } from "../../helper/common";
+import useDebounceState from "../../hooks/useDebounceState";
+import UserAvatar from "../common/UserAvatar";
 
 function Header(args) {
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const { auth } = useAuthStore((state) => state);
+  const [state, setState] = useDebounceState();
   const navigate = useNavigate();
+  const [searchParams,setSearchParams] = useSearchParams()
 
   const toggle = () => setIsOpen(!isOpen);
 
@@ -36,6 +38,18 @@ function Header(args) {
       window.location.reload();
     });
   };
+
+  const onChange = (e) =>
+    setState((prevState) => ({
+      ...prevState,
+      [e.target.name]: e.target.value,
+    }));
+
+  useEffect(() => {
+    if(![...searchParams.keys()].length){
+      setState({})
+    }
+  },[searchParams,setSearchParams])
 
   return (
     <Navbar
@@ -58,8 +72,9 @@ function Header(args) {
               <input
                 className="form-control border rounded-pill"
                 type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                name="search"
+                value={state?.search || ""}
+                onChange={onChange}
                 placeholder="Search..."
               />
             </div>
@@ -70,6 +85,12 @@ function Header(args) {
             <>
               <NavItem className="mx-1" onClick={() => navigate("/")}>
                 <HomeIcon
+                  style={{ width: "1.5rem", height: "1.5rem" }}
+                  className="cursor-pointer"
+                />
+              </NavItem>
+              <NavItem className="mx-1" onClick={() => navigate("/chat")}>
+                <ChatBubbleOvalLeftIcon
                   style={{ width: "1.5rem", height: "1.5rem" }}
                   className="cursor-pointer"
                 />
@@ -112,16 +133,7 @@ function Header(args) {
 
               <UncontrolledDropdown nav inNavbar>
                 <DropdownToggle nav caret>
-                  <img
-                    src={auth?.profile ? getImageUrl(auth?.profile) : Avatar}
-                    alt=""
-                    className="cursor-pointer"
-                    style={{
-                      width: "1.5rem",
-                      height: "1.5rem",
-                      borderRadius: "50%",
-                    }}
-                  />
+                  <UserAvatar user={auth} />
                 </DropdownToggle>
                 <DropdownMenu>
                   <DropdownItem>

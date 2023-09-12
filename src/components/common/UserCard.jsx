@@ -1,19 +1,18 @@
 import React from "react";
-import Avatar from "../../assets/profile.png";
-import { capitalizeString, getImageUrl } from "../../helper/common";
+import { capitalizeString } from "../../helper/common";
+import { useNavigate } from "react-router-dom";
+import UserAvatar from "./UserAvatar";
 
 const UserCard = ({ user }) => {
-  const { profile, username, firstName, lastName, email } = user;
+  const { username, firstName, lastName, email } = user;
+  const navigate = useNavigate();
 
   return (
     <div className="d-flex align-items-center">
-      <img
-        src={getImageUrl(profile) || Avatar}
-        alt=""
-        width={48}
-        height={48}
-        className="object-fit-contain rounded-full cursor-pointer"
-      />
+      <div onClick={() => navigate(`/${username}`)} className="cursor-pointer">
+        <UserAvatar user={user} />
+      </div>
+
       <div className="mx-3">
         <span>
           @{username} - {email}

@@ -3,6 +3,8 @@ export {default as Hero} from "./home/Hero";
 export {default as Main} from "./home/Main";
 export {default as Footer} from "./home/Footer";
 export {default as Posts} from './home/Posts';
+export {default as Body} from './chat/Body';
+export {default as Sidebar} from './chat/Sidebar';
 export {default as UserProfilePosts} from './profile/UserProfilePosts';
 export {default as UserProfileSavedPosts} from './profile/UserProfileSavedPosts';
 export {default as NotificationContent} from './notification/NotificationContent';

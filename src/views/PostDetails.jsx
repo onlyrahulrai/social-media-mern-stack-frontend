@@ -22,6 +22,11 @@ import {
   LinkIcon,
 } from "@heroicons/react/24/outline";
 import {
+  Card,
+  CardBody,
+  CardGroup,
+  CardImg,
+  CardSubtitle,
   Col,
   DropdownItem,
   DropdownMenu,
@@ -39,6 +44,7 @@ import {
 } from "react-share";
 import Comment from "../components/post/Comment";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
+import useSocketContext from "../context/useSocketContext";
 
 const ShareButtons = () => {
   const onCopyPostURL = () => {
@@ -110,10 +116,21 @@ const ShareButtons = () => {
   );
 };
 
+const buttonColors = [
+  "primary",
+  "secondary",
+  "info",
+  "danger",
+  "warning",
+  "black",
+];
+
 const PostDetail = () => {
   const { id } = useParams();
   const [post, setPost] = useState(null);
-  const { setAuth, auth,socket } = useAuthStore((state) => state);
+  const [relatedPosts, setRelatedPosts] = useState([]);
+  const { setAuth, auth} = useAuthStore((state) => state);
+  const {onPostLikedRequestNotification} = useSocketContext();
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -123,7 +140,8 @@ const PostDetail = () => {
 
       await axiosInstance
         .get(`/posts/${id}`)
-        .then(({ data: { description, ...rest } }) => {
+        .then(({ data: { post, relatedPosts } }) => {
+          const { description, ...rest } = post;
           const blocksFromHTML = htmlToDraft(description);
 
           const contentState = ContentState.createFromBlockArray(
@@ -134,6 +152,8 @@ const PostDetail = () => {
           const newEditorState = EditorState.createWithContent(contentState);
 
           setPost({ ...rest, description: newEditorState });
+
+          setRelatedPosts(relatedPosts);
 
           setLoading(false);
         })
@@ -174,7 +194,11 @@ const PostDetail = () => {
       likePostPromise.then(({ data }) => {
         setPost((state) => ({ ...state, likes: data?.likes }));
 
-        socket.emit("postLikedNotification",{liked:data?.likes.includes(auth?.id),postId:id,user:post?.user?._id})
+        onPostLikedRequestNotification({
+          liked: data?.likes.includes(auth?.id),
+          postId: id,
+          user: post?.user?._id,
+        });
       });
     } catch (error) {
       return toast.error(" Couldn't accept your request... ");
@@ -208,14 +232,10 @@ const PostDetail = () => {
     [auth]
   );
 
-  
-
   if (loading) return <Spinner />;
 
   return (
     <div>
-      <h3 className="pb-2 mb-3 fst-italic border-bottom">From the Firehose</h3>
-
       <article className="blog-post">
         <div className="d-flex justify-content-between">
           <div className="d-flex align-items-center my-3">
@@ -278,6 +298,19 @@ const PostDetail = () => {
           toolbarHidden={true}
           readOnly={true}
         />
+
+        <div className="mb-3">
+          {post?.categories.map((category, key) => (
+            <span
+              className={`badge rounded-pill text-bg-${
+                buttonColors[Math.floor(Math.random() * 6)]
+              } text-white p-2`}
+              key={key}
+            >
+              {category.label}
+            </span>
+          ))}
+        </div>
 
         <section id="footer">
           <Row>
@@ -359,6 +392,90 @@ const PostDetail = () => {
               </div>
             </Col>
           </Row>
+        </section>
+
+        <section id="related-post">
+          <hr />
+          <div className="py-2">
+            <h4 className="fst-italic">Related Posts</h4>
+
+            <CardGroup className="pt-4 gap-2">
+              {relatedPosts.map((post, key) => (
+                <Card
+                  key={key}
+                  style={{
+                    borderRadius: "24px 8px 24px 24px",
+                    border: "1px solid rgba(57, 57, 57, 0.5)",
+                  }}
+                >
+                  <div
+                    className="d-flex position-relative"
+                    style={{ minHeight: "156px" }}
+                  >
+                    <CardImg
+                      alt="Card image cap"
+                      src={getImageUrl(post.photo)}
+                      top
+                      width="100%"
+                      style={{
+                        maxHeight: "156px",
+                        objectFit: "fill",
+                        borderRadius: "24px 8px 24px 24px",
+                      }}
+                    />
+
+                    <div
+                      className="d-flex align-items-center position-absolute bottom-0 w-100 ps-3"
+                      style={{
+                        backgroundColor: "rgba(57, 57, 57, 0.5)",
+                        borderRadius: "0 0 24px 24px",
+                      }}
+                    >
+                      <img
+                        src={getImageUrl(post?.user?.profile)}
+                        width={36}
+                        alt=""
+                      />
+
+                      <div className="ps-3 text-white">
+                        <span>
+                          <b>
+                            {capitalizeString(
+                              `${post?.user?.firstName} ${post?.user?.lastName}`
+                            )}
+                          </b>
+                        </span>
+                        <br />
+                        <span>
+                          <Link
+                            to={`/${post?.user?.username}`}
+                            className="text-decoration-none text-white"
+                          >
+                            - @{post?.user?.username}
+                          </Link>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Link
+                    to={`/posts/${post._id}`}
+                    target="_blank"
+                    className="text-decoration-none text-dark"
+                  >
+                    <CardBody>
+                      <CardSubtitle tag="h6">
+                        {post.title.length > 48
+                          ? `${post.title.substring(0, 48)}...`
+                          : post.title}
+                      </CardSubtitle>
+                    </CardBody>
+                  </Link>
+
+                </Card>
+              ))}
+            </CardGroup>
+          </div>
         </section>
       </article>
     </div>

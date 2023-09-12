@@ -56,8 +56,6 @@ const Followers = ({ profile, onRequestFriend, onRemoveUserFromFollowers }) => {
 
   if (loading) return <Spinner />;
 
-  console.log(" Data ", data);
-
   return (
     <div>
       {data?.followers?.length ? (

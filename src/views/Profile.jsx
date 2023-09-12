@@ -6,7 +6,6 @@ import { Button, Nav, NavItem, TabContent, TabPane } from "reactstrap";
 import { TableCellsIcon, BookmarkIcon } from "@heroicons/react/24/outline";
 import {
   createSearchParams,
-  useLocation,
   useNavigate,
   useParams,
 } from "react-router-dom";
@@ -15,6 +14,7 @@ import { getUser } from "../helper/helper";
 import { toast } from "react-hot-toast";
 import Spinner from "../components/Spinner";
 import axiosInstance from "../api/base";
+import useSocketContext from "../context/useSocketContext";
 
 const Profile = () => {
   const { username } = useParams();
@@ -23,7 +23,8 @@ const Profile = () => {
   const [user, setUser] = useState({});
   const { auth, socket } = useAuthStore((state) => state);
   const { loading, setLoading } = useLayoutStore((state) => state);
-  const location = useLocation();
+  const {onFollowUserRequest} = useSocketContext();
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -36,7 +37,7 @@ const Profile = () => {
       }
     };
     fetchUser();
-  }, [location]);
+  }, []);
 
   const onFollow = async (user, id) => {
     try {
@@ -60,7 +61,10 @@ const Profile = () => {
           setUser((state) => ({ ...state, followers: data.followers }))
         ).then(() => {
           if (!user?.followers?.includes(id)) {
-            socket.emit("onFollowUserRequest", {
+
+            console.log(" Data ",data)
+
+            onFollowUserRequest({
               user: user?.id,
               follow: !user?.followers?.includes(id) ? true : false,
             });

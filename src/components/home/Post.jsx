@@ -1,12 +1,19 @@
 import React, { useEffect, useMemo, useState } from "react";
-import Banner from "../../assets/banner.jpg";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 import Avatar from "../../assets/profile.png";
 import { getImageUrl, getLinesOfDescription } from "../../helper/common";
 
 const Post = (props) => {
-  const { _id: id, title, description, created_at, user, photo } = props;
+  const {
+    _id: id,
+    title,
+    description,
+    created_at,
+    user,
+    photo,
+    categories,
+  } = props;
   const { username, profile, firstName, lastName } = user;
   const [content, setContent] = useState("");
   const navigate = useNavigate();
@@ -28,17 +35,19 @@ const Post = (props) => {
 
   useEffect(() => {
     const texts = getLinesOfDescription(description);
+    
     if (texts.length > 0) {
       setContent(texts[0]);
     }
   }, []);
+
 
   return (
     <div className="card mb-3">
       <div className="row g-0">
         <div className="col-md-4">
           <img
-            src={` ${process.env.REACT_APP_BASE_URL}/uploads/${photo}`}
+            src={` ${process.env.REACT_APP_API_URL}/uploads/${photo}`}
             className="img-fluid rounded-start"
             alt="..."
             style={{ height: "100%" }}
@@ -70,9 +79,15 @@ const Post = (props) => {
                 {content ? `${content.trim().substring(0, 128)}..` : null}
               </p>
               <p className="card-text">
-                <span className={`badge rounded-pill text-bg-${getColorClass}`}>
-                  World
-                </span>{" "}
+                {categories?.map((category, key) => (
+                  <span
+                    className={`badge rounded-pill text-bg-${getColorClass}`}
+                    key={key}
+                  >
+                    {category.label}
+                  </span>
+                ))}
+                {" "}
                 <small className="text-body-secondary">
                   {moment(created_at).fromNow()}
                 </small>
