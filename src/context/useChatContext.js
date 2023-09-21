@@ -7,7 +7,7 @@ const ChatContext = createContext();
 
 const withStore = (BaseComponent) => (props) => {
   const auth = useAuthStore((state) => state.auth);
-  const {onReceiveOnlineUsers,socket} = useSocketContext();
+  const { onReceiveOnlineUsers, socket } = useSocketContext();
 
   return <BaseComponent {...props} auth={auth} onReceiveOnlineUsers={onReceiveOnlineUsers} socket={socket} />;
 };
@@ -20,28 +20,34 @@ class ChatContextProvider extends Component {
       loading: false,
       auth: this.props.auth,
       selectedContact: null,
-      socket:this.props.socket
+      selectedChat: null,
+      socket: this.props.socket
     };
   }
 
-  componentDidUpdate(prevProps,prevState,snapshot){
+  componentDidUpdate(prevProps, prevState, snapshot) {
     this.props.onReceiveOnlineUsers()
   }
 
-  componentDidMount(){
-    this.props.socket.on("onJoinChatResponse",(data) => console.log(" Messages ",data))
+  componentDidMount() {
+    // this.props.socket.on("onSendMessageResponse", (message) => console.log(" On Send Message Response ",message))
   }
 
-  onSelectContact = (contact) => {
-    this.setState({ selectedContact: contact },() => {
-      this.props.socket.emit("onJoinChatRequest",contact._id)
-    });
+  onSelectContact = (selectedContact) => {
+    this.setState({ selectedContact, selectedChat: null });
   };
 
+  onSelectChat = (selectedContact, selectedChat) => {
+    this.setState({ selectedContact, selectedChat }, () => {
+      this.props.socket.emit("onJoinChatRequest", selectedChat)
+    })
+  }
+
   render() {
+    console.log(" State ", this.state)
     return (
       <ChatContext.Provider
-        value={{ ...this.state, onSelectContact: this.onSelectContact }}
+        value={{ ...this.state, onSelectContact: this.onSelectContact, onSelectChat: this.onSelectChat }}
       >
         {this.state.loading ? <Spinner /> : this.props.children}
       </ChatContext.Provider>
