@@ -6,19 +6,18 @@ import { capitalizeString } from "../../helper/common";
 import { Input, Spinner } from "reactstrap";
 import useChatContext, { ChatConsumer } from "../../context/useChatContext";
 
-const ChatUser = ({ user }) => {
-  const { onSelectContact, selectedContact } = useChatContext();
+const ChatUser = ({ user, ...rest }) => {
+  const { onSelectContact, onSelectChat, selectedContact } = useChatContext();
 
   return (
     <div
-      className={`card mb-1 cursor-pointer ${
-        selectedContact?._id === user?._id ? "bg-light-gray" : ""
-      }`}
-      onClick={() => onSelectContact(user)}
+      className={`card mb-1 cursor-pointer ${selectedContact?._id === user?._id ? "bg-light-gray" : ""
+        }`}
+      onClick={() => rest?.chat ? onSelectChat(user, rest?.chat?._id) : onSelectContact(user)}
     >
       <div className="card-body  p-half d-flex">
         <div className="position-relative">
-          <UserAvatar user={user} chat />
+          <UserAvatar user={user} size={48} />
 
           {user?.online ? (
             <div
@@ -33,7 +32,12 @@ const ChatUser = ({ user }) => {
             {capitalizeString(`${user?.firstName} ${user?.lastName}`)}
           </strong>
           <br />
-          <span>Hi</span>
+
+          {
+            rest?.chat?.latestMessage ? (
+              <span>{rest?.chat?.latestMessage?.content}</span>
+            ) : null
+          }
         </div>
       </div>
     </div>
@@ -126,14 +130,13 @@ class Sidebar extends React.Component {
   };
 
   onClearSearch = () => {
-    this.setState({ search: "",contacts:[] }, () => this.fetchAuthChats());
+    this.setState({ search: "", contacts: [] }, () => this.fetchAuthChats());
   };
 
   getChatRecipient = (authId, members) =>
     members.filter((member) => member._id !== authId).shift();
 
   render() {
-    console.log(" Chats ", this.state.chats);
     return (
       <ChatConsumer>
         {(props) => (
@@ -190,6 +193,7 @@ class Sidebar extends React.Component {
                   {this.state.chats.map((chat, key) => (
                     <ChatUser
                       user={this.getChatRecipient(props.auth.id, chat.members)}
+                      chat={chat}
                       key={`conatct-${key}`}
                     />
                   ))}
