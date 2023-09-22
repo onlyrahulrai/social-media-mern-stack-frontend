@@ -44,7 +44,6 @@ class ChatContextProvider extends Component {
   }
 
   render() {
-    console.log(" State ", this.state)
     return (
       <ChatContext.Provider
         value={{ ...this.state, onSelectContact: this.onSelectContact, onSelectChat: this.onSelectChat }}

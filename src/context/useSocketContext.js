@@ -27,6 +27,10 @@ class SocketContextProvider extends React.Component {
   });
 
   componentDidMount() {
+    this.socket.on("connect",() => {
+      this.socket.emit("onSocketConnection")
+    })
+
     this.socket.on(
       "onNotificationMarkedReadResponse",
       ({ notification: _notification, countOfNotification }) => {
@@ -47,9 +51,6 @@ class SocketContextProvider extends React.Component {
     );
 
     this.socket.on("onPostLikedResponseNotification", (data) => {
-
-      console.log(" Data ", data);
-
       const { countOfNotification, notification } = data;
 
       this.props.store.setState({
@@ -60,8 +61,6 @@ class SocketContextProvider extends React.Component {
     });
 
     this.socket.on("onFollowUserResponse", (data) => {
-      console.log(" data on Follow User Response", data);
-
       const { countOfNotification, notification } = data;
 
       this.props.store.setState({
@@ -71,8 +70,6 @@ class SocketContextProvider extends React.Component {
     });
 
     this.socket.on("onCreatePostResponse", (data) => {
-      console.log(" data on create post response ", data);
-
       const { countOfNotification, notification } = data;
 
       this.props.store.setState({

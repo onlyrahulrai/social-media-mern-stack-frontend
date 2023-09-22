@@ -73,8 +73,6 @@ const Profile = () => {
     });
   };
 
-  // console.log(" Display Image ", displayImage);
-
   return (
     <React.Fragment>
       <div

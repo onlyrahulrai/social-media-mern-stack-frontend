@@ -2,21 +2,24 @@ import {
   EllipsisVerticalIcon,
   FaceSmileIcon,
   MagnifyingGlassIcon,
+  MicrophoneIcon,
   PaperAirplaneIcon,
+  PaperClipIcon,
+  PhotoIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, Form, Input, InputGroup, InputGroupText } from "reactstrap";
+import { Button, Dropdown, DropdownItem, DropdownMenu, DropdownToggle, Form, Input, InputGroup, InputGroupText, Modal, ModalBody, ModalFooter, ModalHeader } from "reactstrap";
 import useChatContext from "../../context/useChatContext";
 import EmptyChatScreen from "../../assets/empty-chat-screen.png";
 import UserAvatar from "../common/UserAvatar";
-import { capitalizeString, } from "../../helper/common";
+import { capitalizeString, getImageUrl, } from "../../helper/common";
 import axiosInstance from "../../api/base";
 import Spinner from "../Spinner";
 import useSocketContext from "../../context/useSocketContext";
 import ScrollableFeed from 'react-scrollable-feed';
 import EmojiPicker from 'emoji-picker-react';
-
-
+import { convertToBase64 } from "../../helper/convert";
 
 const Message = ({ message }) => {
   const { auth } = useChatContext()
@@ -28,9 +31,12 @@ const Message = ({ message }) => {
           (message?.sender?._id !== auth?.id) ? <UserAvatar user={message?.sender} style={{ border: "1px solid", borderRadius: "50%", marginLeft: "6px", marginRight: "6px" }} size={24} /> : null
         }
 
-        {message?.content}
+        {message?.type === 'image' ? (
+          <>
+            <img src={getImageUrl(message.file)} alt={message._id} className="img-thumbnail" width={156} height={156} />
+          </>
+        ) : message?.content}
       </span>
-
     </div>
   )
 }
@@ -45,6 +51,11 @@ const Body = () => {
   const [messageSending, setMessageSending] = useState(false)
   const [showEmojiSelector, setShowEmojiSelector] = useState(false)
   const emojiPickerRef = useRef(null)
+  const [showAttachment, setShowAttachment] = useState(false);
+  const [field, setField] = useState(null);
+  const [displayImage, setDisplayImage] = useState(null);
+  const inputFileRef = useRef(null);
+  const [isOpenSendImageModel, setIsOpenSendImageModel] = useState(false);
 
   useEffect(() => {
     const fetchChats = async () => {
@@ -65,38 +76,46 @@ const Body = () => {
         })
     }
 
-    console.log(" Selected Chat ",selectedChat)
-
     if (selectedChat) {
       fetchChats();
     }
 
   }, [selectedChat])
 
-  const onSendMessage = async (e) => {
-    e.preventDefault();
+  const onSendMessage = async () => {
+    console.log(" Message Sending ", messageSending, !(content || field))
 
-    if (messageSending || !content) return null;
+    if (messageSending || !(content || field)) return null;
 
     setMessageSending(true)
 
-    const data = {
-      content,
-      recipientId: selectedContact?._id,
+    const formData = new FormData();
+
+    if (field) {
+      formData.append('file', field.file)
+    } else {
+      formData.append('content', content)
     }
 
-    await axiosInstance.post("/chats/messages", data)
+    formData.append('recipientId', selectedContact?._id)
+
+    formData.append('type', field ? field.type : "message")
+
+    await axiosInstance.post("/chats/messages", formData)
       .then((response) => {
         setMessages((prevState) => ([...prevState, response.data]))
 
-        console.log(" Response ",response.data)
+        console.log(" Response ", response.data)
 
-        if(!selectedChat){
-          onSelectChat(selectedContact,response?.data?.chat?._id)
+        if (!selectedChat) {
+          onSelectChat(selectedContact, response?.data?.chat?._id)
         }
 
         socket.emit("onSendMessageRequest", response.data)
         setContent("")
+        setField(null)
+        setIsOpenSendImageModel(false)
+        setDisplayImage(null)
         setMessageSending(false)
         setShowEmojiSelector(false)
       })
@@ -104,6 +123,14 @@ const Body = () => {
         console.log(" Error ", error)
         setMessageSending(false)
       })
+  }
+
+  const onSubmitForm = async (e) => {
+    e.preventDefault();
+
+    console.log(" Form Submitting ", content, field)
+
+    onSendMessage()
   }
 
   useEffect(() => {
@@ -126,6 +153,22 @@ const Body = () => {
 
     return () => document.removeEventListener("click", onClickOutsideEmojiModel);
   }, [document])
+
+  const onClickShowAttachment = () => setShowAttachment((prevState) => !prevState);
+
+  const onUpload = (e) => {
+    Promise.resolve(setField({ type: "image", file: e.target.files[0] })).then(async () => {
+      setIsOpenSendImageModel(true)
+      setDisplayImage(await convertToBase64(e.target.files[0]));
+      setShowAttachment(false);
+    });
+  }
+
+  const onTogglePreviewFileModel = () => {
+    setField(null)
+    setIsOpenSendImageModel(false)
+    setDisplayImage(null)
+  }
 
   return (
     <div className="border" style={{ height: "72vh" }}>
@@ -195,6 +238,8 @@ const Body = () => {
               </ScrollableFeed>
             </div>
 
+
+
             <div className="position-absolute bottom-0 w-100">
 
               {
@@ -207,8 +252,19 @@ const Body = () => {
                 ) : null
               }
 
-              <Form onSubmit={onSendMessage}>
+              <Form onSubmit={onSubmitForm}>
                 <div className="d-flex align-items-center gap-2">
+                  <Dropdown isOpen={showAttachment} toggle={onClickShowAttachment} direction="up">
+                    <DropdownToggle caret color="light">
+                      <PaperClipIcon style={{ width: "1.5rem", height: "1.5rem" }} />
+                    </DropdownToggle>
+                    <DropdownMenu>
+                      <DropdownItem className="d-flex align-items-center gap-2" onClick={() => inputFileRef.current.click()}>
+                        <PhotoIcon style={{ width: "1.5rem", height: "1.5rem" }} />  Photos
+                      </DropdownItem>
+                    </DropdownMenu>
+                  </Dropdown>
+
                   <InputGroup>
                     <Input placeholder="Type a Message..." value={content} onChange={(e) => setContent(e.target.value)} />
 
@@ -217,12 +273,40 @@ const Body = () => {
                     </InputGroupText>
                   </InputGroup>
 
-                  <Button type="submit" color="primary" disabled={messageSending}>
-                    <PaperAirplaneIcon
-                      style={{ width: "1.5rem", height: "1.5rem" }}
-                    />
-                  </Button>
+                  <input
+                    type="file"
+                    hidden
+                    accept="image/*"
+                    onChange={onUpload}
+                    ref={inputFileRef}
+                  />
+
+                  <MicrophoneIcon
+                    style={{ width: "1.5rem", height: "1.5rem", marginRight: "8px" }}
+                  />
+
                 </div>
+
+                {
+                  isOpenSendImageModel ? (
+                    <Modal isOpen={isOpenSendImageModel} toggle={onTogglePreviewFileModel} centered>
+                      <ModalHeader toggle={onTogglePreviewFileModel}>Selected Image - {field?.file?.name}</ModalHeader>
+
+                      <ModalBody className="d-flex justify-content-center align-items-center">
+                        <img src={displayImage || ""} alt={field?.file?.name} className="img-thumbnail" width={256} />
+                      </ModalBody>
+
+                      <ModalFooter>
+                        <Button type="button" color="danger" onClick={onTogglePreviewFileModel}>
+                          <XMarkIcon style={{ width: "1.5rem", height: "1.5rem" }} />
+                        </Button>{' '}
+                        <Button type="button" onClick={onSendMessage} color="success" disabled={messageSending}>
+                          <PaperAirplaneIcon style={{ width: "1.5rem", height: "1.5rem", transform: "rotate(-45deg)" }} />
+                        </Button>
+                      </ModalFooter>
+                    </Modal>
+                  ) : null
+                }
               </Form>
             </div>
           </div>
