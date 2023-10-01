@@ -28,6 +28,7 @@ class SocketContextProvider extends React.Component {
 
   componentDidMount() {
     this.socket.on("connect",() => {
+      console.log(" Connection Established.. ")
       this.socket.emit("onSocketConnection")
     })
 

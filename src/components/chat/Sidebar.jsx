@@ -1,5 +1,5 @@
 import React from "react";
-import { EllipsisVerticalIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { EllipsisVerticalIcon, UserPlusIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import UserAvatar from "../common/UserAvatar";
 import apiClient from "../../api/base";
 import { capitalizeString } from "../../helper/common";
@@ -53,7 +53,7 @@ class Sidebar extends React.Component {
       chats: [],
       loading: false,
       error: null,
-      search: "",
+      search: ""
     };
   }
 
@@ -130,11 +130,15 @@ class Sidebar extends React.Component {
   };
 
   onClearSearch = () => {
-    this.setState({ search: "", contacts: [] }, () => this.fetchAuthChats());
+    this.setState({ search: "", contacts: [],showContacts:false }, () => this.fetchAuthChats());
   };
 
   getChatRecipient = (authId, members) =>
     members.filter((member) => member._id !== authId).shift();
+
+  onToggleDisplayContacts = () => {
+    this.fetchAuthContacts();
+  }
 
   render() {
     return (
@@ -143,19 +147,23 @@ class Sidebar extends React.Component {
           <div className="border " style={{ height: "72vh" }}>
             <div
               className="d-flex border-bottom  flex-column justify-content-between p-2"
-              style={{ height: "16%" }}
+              style={{ height: "18%" }}
             >
               <div className="d-flex justify-content-between align-items-center">
                 <UserAvatar user={props?.auth} />
 
                 <div>
+                  <UserPlusIcon
+                    style={{ width: "1.5rem", height: "1.5rem",cursor:"pointer" }}
+                    onClick={!this.state.contacts.length ? this.onToggleDisplayContacts : this.onClearSearch}
+                  />
                   <EllipsisVerticalIcon
-                    style={{ width: "2rem", height: "2rem" }}
+                    style={{ width: "1.5rem", height: "1.5rem" }}
                   />
                 </div>
               </div>
 
-              <div className="position-relative">
+              <div className="position-relative mt-3">
                 <Input
                   value={this.state.search}
                   onChange={this.onChange}
@@ -177,10 +185,10 @@ class Sidebar extends React.Component {
               </div>
             </div>
 
-            <div className="p-1" style={{ height: "84%", overflowY: "auto" }}>
+            <div className="p-1" style={{ height: "82%", overflowY: "auto" }}>
               {this.state.contacts.length ? (
                 <div>
-                  <span className="text-success">Contacts</span>
+                  <span className="text-success"> Contacts</span>
 
                   <div className="p-1">
                     {this.state.contacts.map((contact, key) => (

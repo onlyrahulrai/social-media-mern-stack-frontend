@@ -48,6 +48,8 @@ const Home = () => {
     fetchPosts();
   }, [searchParams]);
 
+  
+
   if (error)
     return (
       <div

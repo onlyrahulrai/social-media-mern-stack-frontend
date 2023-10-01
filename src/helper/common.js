@@ -1,6 +1,10 @@
 import htmlToDraft from "html-to-draftjs";
 import { toast } from "react-hot-toast";
 import axiosInstance from "../api/base";
+import _Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
+
+
 
 export const capitalizeString = (str = " ") =>
   str?.charAt(0)?.toUpperCase() + str?.slice(1);
@@ -37,3 +41,5 @@ export const onfollow = async (user,setState) => {
     return toast.error("Couldn't follow the user.");
   }
 };
+
+export const Swal = withReactContent(_Swal)

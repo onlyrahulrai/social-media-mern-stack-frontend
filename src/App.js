@@ -22,9 +22,13 @@ import { useAuthStore } from "./store/store";
 import axiosInstance from "./api/base";
 import { Routes, Route } from "react-router-dom";
 import { ChatProvider } from "./context/useChatContext";
+import useSocketContext from "./context/useSocketContext";
+import { Swal, capitalizeString, getImageUrl } from "./helper/common";
+import { PhoneIcon } from "@heroicons/react/24/outline";
 
 function App() {
   const { setState } = useAuthStore((state) => state);
+  const { socket } = useSocketContext();
 
   useEffect(() => {
     const loadUserDetails = async () => {
@@ -43,6 +47,49 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    if (socket) {
+      socket.on("onWaitForVideoCall", (data) => {
+        Swal.fire({
+          position: 'bottom-end',
+          html: <div>
+            <div>
+              <img src={getImageUrl(data?.caller?.profile)} alt={data?.caller?.username} className="img-thumbnail rounded-circle object-fit-contain" width={128} height={128} />
+            </div>
+
+            <div className="mt-2">
+              {capitalizeString(`${data?.caller?.firstName} ${data?.caller?.lastName}`)}
+            </div>
+
+            <div className="my-2">
+              <span>Incoming Call...</span>
+            </div>
+
+            <div className="d-flex justify-content-center gap-2 mt-3">
+              <div className="d-flex justify-content-center align-items-center rounded-circle cursor-pointer" style={{ width: "2.5rem", height: "2.5rem", background: "#20c997" }}>
+                <PhoneIcon color="white" style={{ width: "1.5rem", height: "1.5rem" }} />
+              </div>
+
+              <div className="d-flex justify-content-center align-items-center rounded-circle cursor-pointer" style={{ width: "2.5rem", height: "2.5rem", background: "#dc3545" }} onClick={() => Promise.resolve(
+                socket.emit("onRejectCallRequest", data?.caller)
+              ).then(() => {
+                Swal.close()
+              })} >
+                <PhoneIcon color="white" style={{ width: "1.5rem", height: "1.5rem", transform: "rotate(135deg)" }} />
+              </div>
+            </div>
+          </div>,
+          showConfirmButton: false,
+        })
+      })
+
+      socket.on("onResponseDismissCall", () => {
+        console.log(" Call Dismissed... ")
+        Swal.close()
+      })
+    }
+  }, [socket])
+
   return (
     <React.Fragment>
       <Routes>
@@ -56,7 +103,7 @@ function App() {
 
         <Route element={<PrivateRoutes />}>
           <Route element={<BaseLayout />}>
-            <Route path="notifications" element={<Notification />} />
+            <Route path="/notifications" element={<Notification />} />
 
             <Route path="/posts/create/" element={<CreatePost />} />
             <Route path="/posts/:id/update" element={<CreatePost />} />
@@ -76,6 +123,7 @@ function App() {
           </Route>
         </Route>
 
+
         <Route element={<PublicRoutes />}>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -86,7 +134,7 @@ function App() {
 
         <Route path="*" element={<PageNotFound />} />
       </Routes>
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster reverseOrder={false} />
     </React.Fragment>
   );
 }

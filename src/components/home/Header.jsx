@@ -28,15 +28,16 @@ function Header(args) {
   const { auth } = useAuthStore((state) => state);
   const [state, setState] = useDebounceState();
   const navigate = useNavigate();
-  const [searchParams,setSearchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const toggle = () => setIsOpen(!isOpen);
 
   const logout = () => {
-    Promise.resolve(localStorage.removeItem("authTokens")).then(() => {
-      axiosInstance.deauthorize();
-      window.location.reload();
-    });
+    Promise.resolve(localStorage.removeItem("authTokens"))
+      .then(() => {
+        axiosInstance.deauthorize();
+        window.location.reload();
+      })
   };
 
   const onChange = (e) =>
@@ -46,10 +47,10 @@ function Header(args) {
     }));
 
   useEffect(() => {
-    if(![...searchParams.keys()].length){
+    if (![...searchParams.keys()].length) {
       setState({})
     }
-  },[searchParams,setSearchParams])
+  }, [searchParams, setSearchParams])
 
   return (
     <Navbar
